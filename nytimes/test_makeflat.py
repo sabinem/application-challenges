@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+this file contains the tests for makeflat.py
+"""
 import unittest
 
 import makeflat
 
-
+# testdata
 empty_dict = {}
 transformed_empty_dict = empty_dict
 simple_dict = {'a': 1, 'b': 2}
@@ -40,6 +43,7 @@ transformed_nested_dict_with_empty_structures = {
     'b.0.c': 2, 'b.1.d': 3
 }
 
+# testdata from the original source
 query_result_simple = {
     "web_url": "https://www.nytimes.com/reuters/2017/08/03/world/africa/03reuters-safrica-politics.html",
     "snippet": "The woman who will decide whether to allow a secret ballot that could oust South African President Jacob Zuma was quoted on Thursday saying she would \"do the right thing\".",
@@ -412,7 +416,3 @@ class TestMakeFlat(unittest.TestCase):
             makeflat.make_flat_structure(query_result_complex),
             transformed_query_result_complex
         )
-
-
-if __name__ == '__main__':
-    unittest.main()

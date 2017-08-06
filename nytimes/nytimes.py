@@ -7,7 +7,6 @@ import json
 import urllib
 import time
 import os
-import pprint
 
 import nyt_constants
 import makeflat
@@ -17,7 +16,7 @@ from settings import log, JSON_DIR, NYT_REPORT_UNKNOWN_VALUES
 
 def make_outputfile_name(query):
     """
-    makes a filename from query dict
+    makes a recognizable filename from the query dict
     """
     query_parms = [v.lower().replace(" ", "-") for k, v in query.items()]
     return '_'.join(query_parms)
@@ -84,9 +83,9 @@ class NYTimesSource(object):
     def connect(self):
         """connect to url
         - get meta data (total hits)
-        - get first batch of 10 articles
+        - get a new batch of 10 articles
         - the program goes to sleep between API requests
-        in order to avoid the rate limit
+        in order to avoid the API's rate limit
         """
 
         # sleep between request to avoid API Rate limit
@@ -174,10 +173,15 @@ class NYTimesSource(object):
 
     def getDataBatch(self, batch_size):
         """
-        Generator - Get data from source on batches.
-        :returns One list for each batch. Each of those is a list of
-                 dictionaries with the defined rows.
-        holt alle news artikel und schreibt sie in eine Liste
+        Generator
+        - Get articles from source in batches of 10
+        - check the articles for unknown field or values
+        - transform the articles into flat dictionaries,
+        (see description in README)
+        - write the flat articles as json to a file
+        with a recognizable name (see README)
+        - yield the articles as batch, before the next
+        batch is requested from the source
         """
         log.info("requested: {} batches"
                  .format(batch_size))
@@ -187,11 +191,6 @@ class NYTimesSource(object):
             # connect to source
             self.connect()
 
-            #max_serve = min(batch_size, self.total_nr_batches)
-
-            #if j >= max_serve:
-            #    continue
-
             # now self.raw_articles is set as a list
             # of the returned articles
 
@@ -200,26 +199,36 @@ class NYTimesSource(object):
             # they are written to a batch
             batch = []
             for article in self.raw_articles:
+
                 # flatten articles and check keys
                 flat_article = makeflat.make_flat_structure(article)
-                self.checkKeysAgainstSchema(flat_article)
+
+                # check for unknown keys and values
+                self._checkKeysAgainstSchema(flat_article)
+
+                # append flattened article to the batch that
+                # will be served
                 batch.append(flat_article)
 
             # the batch is written to a recognizable file
             # that is named with the query parameters
+
+            # make the filename
             batchfilename = '.'.join([self.outputfilename,
                                       str(j), 'json'])
             batch_as_json = json.dumps(batch, indent=4)
             batchfile = os.path.join(
                 JSON_DIR, batchfilename)
 
+            # then write the batch to the file
             with open(batchfile, 'w') as outfile:
                 outfile.write(batch_as_json)
 
+            # log the file write
             log.info(u'wrote {1} articles to {0}'.format(
                 batchfilename, len(batch)))
 
-            # the batch is yielded
+            # serve the batch
             log.info("Serving batch of {} articles".format(len(batch)))
             yield batch
 
@@ -233,7 +242,7 @@ class NYTimesSource(object):
                 log.info("Finished after all hits have been served")
                 break
 
-    def checkKeysAgainstSchema(self, flat_article):
+    def _checkKeysAgainstSchema(self, flat_article):
         """
         The keys are checked against the known data schema
         to spot new fields or values.

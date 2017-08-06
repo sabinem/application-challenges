@@ -1,17 +1,14 @@
-"""this file includes constants and settings
-- the directory for the json output is specified
-- the known constants from the API are kept here
 """
-import os
+Constants for the NY Times API
+"""
 
-# constants for Directory Settings
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-JSON_DIR = os.path.join(BASE_DIR, 'json')
-
-# constants for the NY Times Interface
+# the Url for the Article API
 NYTIMES_ARTICLES_URL = \
     'https://api.nytimes.com/svc/search/v2/articlesearch.json'
 
+# 'type_of_material' is an article field with discrete values
+# they are reported in the API's documentation
+# http://developer.nytimes.com/article_search_v2.json#/README
 TYPE_OF_MATERIAL = [
     "Addendum", "An Analysis", "An Appraisal", "Article",
     "Banner", "Biography", "Birth Notice",
@@ -38,6 +35,9 @@ TYPE_OF_MATERIAL = [
     "Text", "Video", "Web Log"
 ]
 
+# 'section_name' is an article field with discrete values
+# they are reported in the API's documentation
+# http://developer.nytimes.com/article_search_v2.json#/README
 SECTION_NAME = [
     "Arts", "Automobiles", "Autos",
     "Blogs", "Books", "Book Review", "Booming",
@@ -71,6 +71,9 @@ SECTION_NAME = [
     "Week in Review", "World", "Your Money"
 ]
 
+# 'new_desk' is an article field with discrete values
+# they are reported in the API's documentation
+# http://developer.nytimes.com/article_search_v2.json#/README
 NEW_DESK = [
     "Adventure Sports", "Arts & Leisure",
     "Arts", "Automobiles",
