@@ -24,9 +24,9 @@ python2 nytbatches.py 5 <your-api-key> -b 20170414 -e 20170415 -q Facebook
 - **your api key**
 
 ### Optional arguments
-- date **-b** egin search
-- date **-e** nd search
-- **-q** ueryterm
+- date **b** egin search
+- date **e** nd search
+- **q** ueryterm
 
 ## Result
 
@@ -74,8 +74,8 @@ is turned into:
  'keywords.1.rank': 2}
 ```
 
-## Testing
-- `makeflat.py` is tested
-you may try the tests with `python2 -m unittest discover`
+## Tests
+- `makeflat.py` is fully tested:
+- Run the tests with `python2 -m unittest discover`
 
 - The dataloader does not have tests yet.
