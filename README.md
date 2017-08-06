@@ -2,48 +2,52 @@
 
 ## Requirements
 
-- it is assumed you have **python 2.7** installed on your machine
+- It is assumed you have **Python 2.7** installed on your machine
 
 ## Install
-- Unzip the directory and then go into the folder:
-`cd nytimes_challenge`
+- Unzip the directory and then go into the directory:
 
 ## Get Api Key
 
-- get yourself a api key from the New York Times API
+- Get yourself an api key from the New York Times API
 [link for getting an api key](https://developer.nytimes.com/signup)
 
-## Use
+## Usage
 
-- start dataloader with the command:
+- Start dataloader with the following command:
 ```
 python2 nytbatches.py 5 <your-api-key> -b 20170414 -e 20170415 -q Facebook
 ```
 
-required arguments:
-- the number of batches, you request (one batch consists of 10 articles)
-- your api key
+### Required arguments:
+- the **number of batches**, you request (one batch consists of 10 articles)
+- **your api key**
 
-optional arguments
-- date **b**egin search
-- date **e**nd search
-- **q**ueryterm
+### Optional arguments
+- date **-b** egin search
+- date **-e** nd search
+- **-q** ueryterm
 
 ## Result
 
-- You will receive the requested number of batches or as many batches as needed to serve
+### Batches
+- You will receive the requested number of batches
+- Or as many batches as needed to serve
 all hits from your query.
 
-- Online the headers and ids are displayed on screen.
+### Where are the Articles?
 
-- You find the complete flattend records in the batch-files in the `json` directory
-The result of the query above will be stored in files with the names:
+- On screen only headers and ids are displayed.
+
+- You find the complete flattend articles in the batch-files in the `json` directory
+
+- The result of the query above would be stored in files with the following names:
 ```
 facebook_20170414_20170415.0.json
 facebook_20170414_20170415.1.json
 ...
 ```
-- each batch contains 10 or less articles flattened in a json format
+- Each batch contains 10 or less articles
 
 ## Flattend Structure of Articles
 - the programm `makeflat.py` flattens the articles or any structure
