@@ -1,7 +1,32 @@
 # -*- coding: utf-8 -*-
 """
-Dataloader for NYTimes API
+Dataloader for NYTimes Article API
 
+- Articles can only be fetched in batches of 10 items
+
+- the Articles are served in these batches of 10
+
+The dataloader is initiated  with a query as
+NYTimesSource(**config)
+
+The configuration is supposed to contain the api-key
+
+After initiating the class, the getDataBatch method
+can be called with a batch_size. This methods yields
+the requested number of batches in articles.
+
+Example:
+If NYTimesSource(**config) is configured with a query
+that has 235 article hits, 24 batches of 10 articles would be
+needed to fetch all the data.
+
+It is possible to request only 10 batches, then only
+the first 100 articles will be loaded.
+
+The articles are yielded on screen with their headlines
+and ids. They are also written to a file-batches, with
+names, that are derived from the query parameters. You find
+these batchfiles in the 'json' directory.  
 """
 import json
 import urllib
@@ -80,7 +105,7 @@ class NYTimesSource(object):
         # an outputfile name is preconfigured
         self.outputfilename = make_outputfile_name(self.queryconfig)
 
-    def connect(self):
+    def _connect(self):
         """connect to url
         - get meta data (total hits)
         - get a new batch of 10 articles
@@ -189,7 +214,7 @@ class NYTimesSource(object):
         for j in range(batch_size):
 
             # connect to source
-            self.connect()
+            self._connect()
 
             # now self.raw_articles is set as a list
             # of the returned articles
@@ -274,19 +299,19 @@ class NYTimesSource(object):
                             .format(value, key))
 
             elif (len(keyparts) == 1 and
-                  key not in self.getSchema()):
+                  key not in self._getSchema()):
                 log.warning(u'Unknown data key detected: {}'.format(key))
 
             elif (keyparts[0] in ['headline', 'byline'] and
-                  key not in self.getSchema()):
+                  key not in self._getSchema()):
                 log.warning(u'Unknown data key detected: {}'.format(key))
 
             elif (keyparts[0] in ['keywords', 'multimedia'] and
                   '.'.join([keyparts[0], '0', keyparts[2]])
-                  not in self.getSchema()):
+                  not in self._getSchema()):
                 log.warning(u'Unknown data key detected: {}'.format(key))
 
-    def getSchema(self):
+    def _getSchema(self):
         """
         Return the schema of the dataset
         :returns a List containing the names of the columns retrieved from the
