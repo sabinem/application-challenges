@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-this file contains the tests for makeflat.py
+This file contains the tests for makeflat.py
+
+makeflat.py allows to flatten nested structures
+that contain dictionaries and lists
 """
 import unittest
 
