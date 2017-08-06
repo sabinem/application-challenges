@@ -1,4 +1,7 @@
-"""access program to try the dataloader"""
+"""Access program for the NY Times Article Dataloader
+- gives the dataloader a command line interface
+- requests the batches from the dataloader
+"""
 import argparse
 import datetime
 import textwrap
