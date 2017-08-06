@@ -27,8 +27,8 @@ def get_structure_depth(structure):
 
     - assume the most complex case and reduce the complexity by 1 degree
 
-    - the structure might be a dictionary or list, in this case the depth is the
-    the depth of the nested items + 1
+    - the structure might be a dictionary or list, in this case the
+    depth is the depth of the nested items + 1
 
     - catch the case where the depth is 0"""
     if isinstance(structure, dict) and structure:
