@@ -19,7 +19,7 @@ def valid_date(datearg):
 # define arguments
 parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
-    description = textwrap.dedent('''\
+    description=textwrap.dedent('''\
              ------------------------------------------------------
                         Dataloader for the New York Times API
              ------------------------------------------------------
@@ -70,6 +70,6 @@ source = nytimes.NYTimesSource(**config)
 
 # write ids and headers of the retrieved articles
 for idx, batch in enumerate(source.getDataBatch(nr_batches)):
-    print u'Received Batch {1} of {0} items'.format(len(batch), idx + 1)
+    print u'Received Batch {1} of {0} items'.format(len(batch), idx+1)
     for item in batch:
         print u'  - {0} - {1}'.format(item['_id'], item['headline.main'])

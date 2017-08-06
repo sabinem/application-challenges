@@ -351,7 +351,8 @@ class TestMakeFlat(unittest.TestCase):
 
     def test_get_structure_depth_nested_dict_with_list(self):
         """nested dictionary with list above has depth 3"""
-        self.assertEquals(makeflat.get_structure_depth(nested_dict_with_list), 3)
+        self.assertEquals(makeflat.get_structure_depth(
+            nested_dict_with_list), 3)
 
     def test_get_structure_depth_query_result_simple(self):
         """simple query result above has depth 2"""
@@ -359,7 +360,8 @@ class TestMakeFlat(unittest.TestCase):
 
     def test_get_structure_depth_query_result_complex(self):
         """complex query result above has depth 4"""
-        self.assertEquals(makeflat.get_structure_depth(query_result_complex), 4)
+        self.assertEquals(makeflat.get_structure_depth(
+            query_result_complex), 4)
 
     def test_makeflat_structure_empty_dict(self):
         """empty dictionary is already flat: remains the same"""
@@ -390,14 +392,16 @@ class TestMakeFlat(unittest.TestCase):
         )
 
     def test_makeflat_structure_nested_dict_with_list(self):
-        """nested dictionary with list above will be transformed into a flat dict"""
+        """nested dictionary with list above
+        will be transformed into a flat dict"""
         self.assertDictEqual(
             makeflat.make_flat_structure(nested_dict_with_list),
             transformed_nested_dict_with_list
         )
 
     def test_makeflat_nested_dict_with_empty_structures(self):
-        """nested dictionary with list above will be transformed into a flat dict"""
+        """nested dictionary with list above will be
+        transformed into a flat dict"""
         self.assertDictEqual(
             makeflat.make_flat_structure(nested_dict_with_empty_structures),
             transformed_nested_dict_with_empty_structures

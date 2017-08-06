@@ -169,7 +169,7 @@ class NYTimesSource(object):
 
         for article in self.raw_articles:
             log.debug("Article: {}"
-                     .format(article['_id']))
+                      .format(article['_id']))
 
     def getDataBatch(self, batch_size):
         """
