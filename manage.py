@@ -42,7 +42,9 @@ parser = argparse.ArgumentParser(
 
                  - You will see your progress, once you start the program!
              '''))
-
+parser.add_argument("nr_batches",
+                    help="number of batches that shall be fetched",
+                    type=int)
 parser.add_argument("api-key", help="your NY Times api-key",
                     type=str)
 parser.add_argument("-b",
@@ -61,19 +63,13 @@ parser.add_argument("-q",
 # parse the arguments
 args = parser.parse_args()
 config = vars(args)
+nr_batches = config.pop('nr_batches')
 
 # configure the source
 source = nytimes.NYTimesSource(**config)
 
-# connect to the source
-try:
-    source.connect()
-except IOError as e:
-    nytimes.log.error(e)
-
-
 # write ids and headers of the retrieved articles
-for idx, batch in enumerate(source.getDataBatch(10)):
-    print u'Batch {1} of {0} items'.format(len(batch), idx)
+for idx, batch in enumerate(source.getDataBatch(nr_batches)):
+    print u'Received Batch {1} of {0} items'.format(len(batch), idx + 1)
     for item in batch:
         print u'  - {0} - {1}'.format(item['_id'], item['headline.main'])

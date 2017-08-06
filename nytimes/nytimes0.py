@@ -63,22 +63,16 @@ class NYTimesSource(object):
         and overwriten, whereas subsequent request just add
         to that file
         """
-        # the configuration is set
         self.config = config
 
-        # the config is copied to a new config
-        # that does not contain the api-key, since
-        # the api-key should not get logged
         self.queryconfig = config.copy()
         self.queryconfig.pop('api-key')
 
-        # the source access is logged with the configuration
         log.info("configuration with api-key removed: {}"
                  .format(json.dumps(self.queryconfig,
                                     sort_keys=True,
                                     indent=4)))
 
-        # an outputfile name is preconfigured
         self.outputfilename = make_outputfile_name(self.queryconfig)
 
     def connect(self):
@@ -88,89 +82,117 @@ class NYTimesSource(object):
         - the program goes to sleep between API requests
         in order to avoid the rate limit
         """
+        while not self.disconnect():
 
-        # sleep between request to avoid API Rate limit
-        time.sleep(5)
+            # sleep between request to avoid API Rate limit
+            time.sleep(5)
+            log.debug("next api request: {}"
+                      .format(json.dumps(self.config,
+                                         sort_keys=True,
+                                         indent=4)))
+            try:
+                # connect to API
+                urlparams = urllib.urlencode(self.config)
+                response = urllib.urlopen(
+                    "https://api.nytimes.com/svc/search/v2/articlesearch.json?%s"
+                    % urlparams)
 
-        if hasattr(self, 'next_page'):
-            self.config['page'] = self.next_page
-
-        log.debug("next api request: {}"
-                  .format(json.dumps(self.config,
-                                     sort_keys=True,
-                                     indent=4)))
-        try:
-            # connect to API
-            urlparams = urllib.urlencode(self.config)
-            response = urllib.urlopen(
-                "https://api.nytimes.com/svc/search/v2/articlesearch.json?%s"
-                % urlparams)
-
-        except IOError:
-            # connection failure
-            raise IOError("Could not connect to the source.\n"
-                          "Check for a working internet connection?")
-
-        else:
-
-            # load response into dict
-            data = response.read()
-            response_dict = json.loads(data)
-
-            # check for errors
-            if ('status' in response_dict and
-                response_dict['status'] == 'ERROR'):
-
-                # query field errors
-                for error in response_dict['errors']:
-                    log.error(" - field error: {}".format(error))
-                raise IOError(
-                    "A configuration error occured, see log for details")
-
-            elif 'message' in response_dict:
-
-                # message from API came back
-                message = response_dict['message']
-                log.error("An error occured: {}".format(message))
-                raise IOError(message)
-
-            elif ('status' in response_dict and
-                  response_dict['status'] == 'OK'):
-                # the okay case is taken care of below
-                pass
+            except IOError:
+                # connection failure
+                raise IOError("Could not connect to the source.\n"
+                              "Check for a working internet connection?")
 
             else:
 
-                # something unknown happened
-                raise IOError("4 An unknown error occured")
+                # load response into dict
+                data = response.read()
+                response_dict = json.loads(data)
 
-        # when no error occured
+                # check for errors
+                if ('status' in response_dict and
+                    response_dict['status'] == 'ERROR'):
 
-        # the hits are only recorded for the first request
-        if not hasattr(self, 'hits'):
+                    # query field errors
+                    for error in response_dict['errors']:
+                        log.error(" - field error: {}".format(error))
+                    raise IOError(
+                        "A configuration error occured, see log for details")
+
+                elif 'message' in response_dict:
+
+                    # message from API came back
+                    message = response_dict['message']
+                    log.error("An error occured: {}".format(message))
+                    raise IOError(message)
+
+                elif ('status' in response_dict and
+                      response_dict['status'] == 'OK'):
+                    pass  # the okay case is taken care of below
+
+                else:
+
+                    # something unknown happened
+                    raise IOError("4 An unknown error occured")
+
+            # when no error occured
             self.hits = response_dict['response']['meta']['hits']
             self.pages = self.hits / 10
-            if self.hits:
-                self.total_nr_batches = self.pages + 1
-            else:
-                self.total_nr_batches = 0
+            self.offset = response_dict['response']['meta']['offset']
+            self.current_page = self.offset / 10
+            if self.hits == 0:
+                log.error("No data found")
+                continue
+            self.raw_articles = response_dict['response']['docs']
+            log.info("Successfully opened resource |"
+                     " total number of hits: {} |"
+                     " serving [page {}]"
+                     .format(self.hits,
+                             self.current_page))
+            self.storeData()
 
-        # the page and content is updated on every request
-        self.offset = response_dict['response']['meta']['offset']
-        self.current_page = self.offset / 10
-        self.next_page = self.current_page + 1
-        self.raw_articles = response_dict['response']['docs']
+    def disconnect(self):
+        """Disconnect from the source,
+        when all hits have been fetched (the current page
+        is already the last page) the search on the source
+        is finished.
 
-        # the request is written to the log
-        log.info("Successfully opened resource |"
-                 " total number of hits: {} |"
-                 " serving [page {}]"
-                 .format(self.hits,
-                         self.current_page))
+        Otherwise the config parameters are adjusted
+        to request the next page
+        """
+        if not hasattr(self, 'hits'):
+            return False
+        elif self.current_page >= self.pages:
+            return True
+        else:
+            self.config['page'] = self.current_page + 1
+            return False
 
+    def storeData(self):
+        """Store the articles in batches
+        and write them to a file in the 'json' directory"""
+        batch = []
         for article in self.raw_articles:
-            log.debug("Article: {}"
-                     .format(article['_id']))
+            # flatten articles and check keys
+            flat_article = makeflat.make_flat_structure(article)
+            self.checkKeysAgainstSchema(flat_article)
+            batch.append(flat_article)
+
+        batchfilename = '.'.join([self.outputfilename,
+                                  str(self.current_page), 'json'])
+        batchfile = os.path.join(
+            JSON_DIR, batchfilename)
+        batch_as_json = json.dumps(batch, indent=4)
+
+        with open(batchfile, 'w') as outfile:
+            outfile.write(batch_as_json)
+
+        log.debug("write batch as json {}"
+                  .format(batch_as_json))
+        log.info(u'wrote {1} articles to {0}'.format(
+            batchfilename, len(batch)))
+
+    def get_page(self, i):
+        return i/10
 
     def getDataBatch(self, batch_size):
         """
@@ -179,59 +201,25 @@ class NYTimesSource(object):
                  dictionaries with the defined rows.
         holt alle news artikel und schreibt sie in eine Liste
         """
-        log.info("requested: {} batches"
-                 .format(batch_size))
+        if self.hits:
+            total_nr_batches = self.pages + 1
+        else:
+            total_nr_batches = 0
 
-        for j in range(batch_size):
+        log.info("requested: {} / {} batches"
+                 .format(batch_size, total_nr_batches))
 
-            # connect to source
-            self.connect()
+        max_serve = min(batch_size, total_nr_batches)
 
-            #max_serve = min(batch_size, self.total_nr_batches)
-
-            #if j >= max_serve:
-            #    continue
-
-            # now self.raw_articles is set as a list
-            # of the returned articles
-
-            # next the articles are flattened,
-            # the attributes are checked and
-            # they are written to a batch
-            batch = []
-            for article in self.raw_articles:
-                # flatten articles and check keys
-                flat_article = makeflat.make_flat_structure(article)
-                self.checkKeysAgainstSchema(flat_article)
-                batch.append(flat_article)
-
-            # the batch is written to a recognizable file
-            # that is named with the query parameters
+        for j in range(max_serve):
             batchfilename = '.'.join([self.outputfilename,
                                       str(j), 'json'])
-            batch_as_json = json.dumps(batch, indent=4)
             batchfile = os.path.join(
                 JSON_DIR, batchfilename)
 
-            with open(batchfile, 'w') as outfile:
-                outfile.write(batch_as_json)
-
-            log.info(u'wrote {1} articles to {0}'.format(
-                batchfilename, len(batch)))
-
-            # the batch is yielded
-            log.info("Serving batch of {} articles".format(len(batch)))
-            yield batch
-
-            # break if all batches have been served
-            if j > batch_size:
-                log.info("Finished after requested batched have been served")
-                break
-
-            # break if all hits have been served
-            if j >= self.pages:
-                log.info("Finished after all hits have been served")
-                break
+            with open(batchfile, 'r') as json_data:
+                batch = json.load(json_data)
+                yield batch
 
     def checkKeysAgainstSchema(self, flat_article):
         """
