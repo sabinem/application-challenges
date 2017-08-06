@@ -50,10 +50,10 @@ facebook_20170414_20170415.1.json
 - Each batch contains 10 or less articles
 
 ## Flattend Structure of Articles
-- the programm `makeflat.py` flattens the articles or any structure
+- The programm `makeflat.py` flattens the articles or any structure
 of python dictionaries and lists recursively
 
-- nested dictionaries are turned into a flat dictonary with a combined key:
+- **Nested dictionaries** are turned into a flat dictonary with combined keys:
 ```
 {'headline': {'main': 'some headline', 'kicker': 'some excitement'}}
 ```
@@ -62,7 +62,7 @@ is turned into:
 {'headline.main': 'some headline',
 'headline.kicker': 'some excitement'}
 ```
-- lists item keys are derived by numbering:
+- **List items** get keys, that are derived by numbering the items:
 ```
 {'keywords': [{'value': 'US', rank': 1}, {'value': 'Soccer', rank': 2}]}
 ```
