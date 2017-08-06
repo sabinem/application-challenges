@@ -7,6 +7,7 @@ import json
 import urllib
 import time
 import os
+import pprint
 
 import nyt_constants
 import makeflat
@@ -71,8 +72,6 @@ class NYTimesSource(object):
                  .format(json.dumps(self.queryconfig,
                                     sort_keys=True,
                                     indent=4)))
-
-        self.batches = []
 
         self.outputfilename = make_outputfile_name(self.queryconfig)
 
@@ -140,6 +139,9 @@ class NYTimesSource(object):
             self.pages = self.hits / 10
             self.offset = response_dict['response']['meta']['offset']
             self.current_page = self.offset / 10
+            if self.hits == 0:
+                log.error("No data found")
+                continue
             self.raw_articles = response_dict['response']['docs']
             log.info("Successfully opened resource |"
                      " total number of hits: {} |"
@@ -188,19 +190,36 @@ class NYTimesSource(object):
                   .format(batch_as_json))
         log.info(u'wrote {1} articles to {0}'.format(
             batchfilename, len(batch)))
-        self.batches.append(batch)
 
-    def getDataBatch(self):
+    def get_page(self, i):
+        return i/10
+
+    def getDataBatch(self, batch_size):
         """
         Generator - Get data from source on batches.
         :returns One list for each batch. Each of those is a list of
                  dictionaries with the defined rows.
         holt alle news artikel und schreibt sie in eine Liste
         """
-        log.info(u'getBatchData from {} batches'.format(len(self.batches)))
+        if self.hits:
+            total_nr_batches = self.pages + 1
+        else:
+            total_nr_batches = 0
 
-        for batch in self.batches:
-            yield batch
+        log.info("requested: {} / {} batches"
+                 .format(batch_size, total_nr_batches))
+
+        max_serve = min(batch_size, total_nr_batches)
+
+        for j in range(max_serve):
+            batchfilename = '.'.join([self.outputfilename,
+                                      str(j), 'json'])
+            batchfile = os.path.join(
+                JSON_DIR, batchfilename)
+
+            with open(batchfile, 'r') as json_data:
+                batch = json.load(json_data)
+                yield batch
 
     def checkKeysAgainstSchema(self, flat_article):
         """

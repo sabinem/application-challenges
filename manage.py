@@ -71,8 +71,9 @@ try:
 except IOError as e:
     nytimes.log.error(e)
 
+
 # write ids and headers of the retrieved articles
-for idx, batch in enumerate(source.getDataBatch()):
+for idx, batch in enumerate(source.getDataBatch(10)):
     print u'Batch {1} of {0} items'.format(len(batch), idx)
     for item in batch:
         print u'  - {0} - {1}'.format(item['_id'], item['headline.main'])
