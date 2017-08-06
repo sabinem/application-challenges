@@ -7,7 +7,7 @@ NYTIMES_ARTICLES_URL = \
     'https://api.nytimes.com/svc/search/v2/articlesearch.json'
 
 # 'type_of_material' is an article field with discrete values
-# they are reported in the API's documentation
+# they are reported in the API's documentation:
 # http://developer.nytimes.com/article_search_v2.json#/README
 TYPE_OF_MATERIAL = [
     "Addendum", "An Analysis", "An Appraisal", "Article",
@@ -36,7 +36,7 @@ TYPE_OF_MATERIAL = [
 ]
 
 # 'section_name' is an article field with discrete values
-# they are reported in the API's documentation
+# they are reported in the API's documentation:
 # http://developer.nytimes.com/article_search_v2.json#/README
 SECTION_NAME = [
     "Arts", "Automobiles", "Autos",
@@ -72,7 +72,7 @@ SECTION_NAME = [
 ]
 
 # 'new_desk' is an article field with discrete values
-# they are reported in the API's documentation
+# they are reported in the API's documentation:
 # http://developer.nytimes.com/article_search_v2.json#/README
 NEW_DESK = [
     "Adventure Sports", "Arts & Leisure",
