@@ -26,7 +26,7 @@ the first 100 articles will be loaded.
 The articles are yielded on screen with their headlines
 and ids. They are also written to a file-batches, with
 names, that are derived from the query parameters. You find
-these batchfiles in the 'json' directory.  
+these batchfiles in the 'json' directory.
 """
 import json
 import urllib
@@ -49,66 +49,51 @@ def make_outputfile_name(query):
 
 class NYTimesSource(object):
     """
-    A data loader plugin for the NY Times API.
-    - gets for one request
+    A data loader plugin for the NY Times API
 
-    the API brings back only 10 records at a time, but reports the
+    Each instance serves one query
+
+    The API brings back only 10 records at a time, but reports the
     total number of hits for the query.
 
-    the records are then fetched in batches of 10 or less record and
+    The records are then fetched in batches of 10 or less record and
     the program goes to sleep for 5 seconds between requests,
     to avoid the rate limit of the API
-
-    the progress is reported to the user
-
-    also unknown fields are logged
-
-    the api seems to change frequently, so be aware
-    of that!
     """
     def __init__(self, **config):
         """
-        the configuration is completed by the api-key,
-        that is here taken from constants but could also
-        be an environmental variable
+        The class is initiated by the query it serves
 
-        the queryconfig is the confiq minus the api-key,
+        The queryconfig is the confiq minus the api-key,
         which is supposed to be secret
 
-        the outputfilename for the json data is derived
-        from the queryconfig, so that different data are
-        stored in different files
+        The outputfilename for the batchfiles is derived
+        from the queryconfig
 
-        the data is fetched in batches of 10 records each
-
-        the initial connect to the source is special,
-        since it brings back the meta data and also
-        the file for writing the json data must be opened
-        and overwriten, whereas subsequent request just add
-        to that file
+        The data is fetched in batches of 10 records each
         """
-        # the configuration is set
+        # The configuration is set
         self.config = config
 
-        # the config is copied to a new config
+        # The config is copied to a new config,
         # that does not contain the api-key, since
         # the api-key should not get logged
         self.queryconfig = config.copy()
         self.queryconfig.pop('api-key')
 
-        # the source access is logged with the configuration
+        # The source config is logged
         log.info("configuration with api-key removed: {}"
                  .format(json.dumps(self.queryconfig,
                                     sort_keys=True,
                                     indent=4)))
 
-        # an outputfile name is preconfigured
+        # An outputfile name for the batches is preconfigured
         self.outputfilename = make_outputfile_name(self.queryconfig)
 
     def _connect(self):
-        """connect to url
+        """connects to the API's url
         - get meta data (total hits)
-        - get a new batch of 10 articles
+        - get a batch of 10 articles
         - the program goes to sleep between API requests
         in order to avoid the API's rate limit
         """
@@ -168,9 +153,9 @@ class NYTimesSource(object):
                 # something unknown happened
                 raise IOError("4 An unknown error occured")
 
-        # when no error occured
+        # When the API call was okay:
 
-        # the hits are only recorded for the first request
+        # The hits are only recorded at the first request
         if not hasattr(self, 'hits'):
             self.hits = response_dict['response']['meta']['hits']
             self.pages = self.hits / 10
@@ -179,19 +164,20 @@ class NYTimesSource(object):
             else:
                 self.total_nr_batches = 0
 
-        # the page and content is updated on every request
+        # The page and content is updated on every request
         self.offset = response_dict['response']['meta']['offset']
         self.current_page = self.offset / 10
         self.next_page = self.current_page + 1
         self.raw_articles = response_dict['response']['docs']
 
-        # the request is written to the log
+        # The request is logged
         log.info("Successfully opened resource |"
                  " total number of hits: {} |"
                  " serving [page {}]"
                  .format(self.hits,
                          self.current_page))
 
+        # In debug modus all found article ids are logged
         for article in self.raw_articles:
             log.debug("Article: {}"
                       .format(article['_id']))
@@ -217,72 +203,76 @@ class NYTimesSource(object):
             self._connect()
 
             # now self.raw_articles is set as a list
-            # of the returned articles
+            # of the articles, that have just been
+            # fetched form the API
 
-            # next the articles are flattened,
+            # Next the articles are flattened,
             # the attributes are checked and
             # they are written to a batch
             batch = []
             for article in self.raw_articles:
 
-                # flatten articles and check keys
+                # Flatten articles
                 flat_article = makeflat.make_flat_structure(article)
 
-                # check for unknown keys and values
+                # Check for unknown keys and values
                 self._checkKeysAgainstSchema(flat_article)
 
-                # append flattened article to the batch that
+                # Append flattened article to the batch that
                 # will be served
                 batch.append(flat_article)
 
-            # the batch is written to a recognizable file
+            # The batch is written to a recognizable file
             # that is named with the query parameters
 
-            # make the filename
+            # Derive the filename
             batchfilename = '.'.join([self.outputfilename,
                                       str(j), 'json'])
             batch_as_json = json.dumps(batch, indent=4)
             batchfile = os.path.join(
                 JSON_DIR, batchfilename)
 
-            # then write the batch to the file
+            # Then write the batch to the file
             with open(batchfile, 'w') as outfile:
                 outfile.write(batch_as_json)
 
-            # log the file write
+            # Log that the file has been writen
             log.info(u'wrote {1} articles to {0}'.format(
                 batchfilename, len(batch)))
 
-            # serve the batch
+            # Log serving the batch
             log.info("Serving batch of {} articles".format(len(batch)))
+
+            # Serve the batch
             yield batch
 
-            # break if all batches have been served
+            # Break if all batches have been served
             if j > batch_size:
                 log.info("Finished after requested batched have been served")
                 break
 
-            # break if all hits have been served
+            # Break if all query hits have been served
             if j >= self.pages:
                 log.info("Finished after all hits have been served")
                 break
 
     def _checkKeysAgainstSchema(self, flat_article):
         """
-        The keys are checked against the known data schema
-        to spot new fields or values.
+        The keys of the flattend articles
+        are checked against the known data schema
+        of the API:
 
-        New fields or values are logged as warnings
-
-        The flattend articles attributes names are taken as
-        starting point for the check
+        The intention is to spot unknown fields or values
+        and recognize changes in the API.
         """
         for key, value in flat_article.items():
 
-            # mainly the first part of the key should be know as a
-            # field in the schema
+            # the derived keys are split into parts
             keyparts = key.split('.')
 
+            # it can be set in the settings whether values
+            # of discrete fields are compared to the known
+            # values in nyt_constants
             if (key == 'type_of_material' and NYT_REPORT_UNKNOWN_VALUES and
                 value not in nyt_constants.TYPE_OF_MATERIAL):
                 log.warning(u'Unknown data value "{}" detected for key: "{}"'
@@ -298,14 +288,18 @@ class NYTimesSource(object):
                 log.warning(u'Unknown data value "{}" detected for key: "{}"'
                             .format(value, key))
 
+            # firstlevel keys should be known
             elif (len(keyparts) == 1 and
                   key not in self._getSchema()):
                 log.warning(u'Unknown data key detected: {}'.format(key))
 
+            # second level keys of nested structure should be known
             elif (keyparts[0] in ['headline', 'byline'] and
                   key not in self._getSchema()):
                 log.warning(u'Unknown data key detected: {}'.format(key))
 
+            # second level keys of the list items keywords and
+            # multimedia should be known
             elif (keyparts[0] in ['keywords', 'multimedia'] and
                   '.'.join([keyparts[0], '0', keyparts[2]])
                   not in self._getSchema()):
@@ -317,17 +311,7 @@ class NYTimesSource(object):
         :returns a List containing the names of the columns retrieved from the
         source.
 
-        These are the known first level columns of the source.
-
-        The result is not flat, so 'headline' or 'byline' come with a nested
-        structure that is flattened and then written to the json output file
-        as 'headline.main', 'headline.print_line', etc.
-
-        Other fields such as 'keywords' and 'multimedia' come as lists.
-        They are flattened as 'keywords.0.rank, keywords.1.rank, etc.
-
-        This schema here refers to the original data and is meant to
-        check against for new fields in the API.
+        This is the schema of the flattend derived article field structure
         """
         schema = [
             'score',
