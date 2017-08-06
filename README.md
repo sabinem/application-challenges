@@ -72,6 +72,6 @@ is turned into:
 
 ## Testing
 - `makeflat.py` is tested
-you may try the tests with `python -m unittest discover`
+you may try the tests with `python2 -m unittest discover`
 
 - The dataloader does not have tests yet.
