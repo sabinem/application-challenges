@@ -12,8 +12,8 @@ def valid_date(datearg):
     """checks whether arguments is a valid date"""
     try:
         datetime.datetime.strptime(datearg, "%Y%m%d")
-    except ValueError:
-        msg = "Not a valid date: '{0}'.".format(s)
+    except (ValueError) as m:
+        msg = "Not a valid date: '{0}'.".format(datearg)
         raise argparse.ArgumentTypeError(msg)
     else:
         return datearg
@@ -63,16 +63,28 @@ parser.add_argument("-q",
                     help="queryterm for the article search",
                     type=str)
 
-# parse the arguments
+# parse the arguments and set configuration
 args = parser.parse_args()
+print type(args)
 config = vars(args)
+
+# pop args that are not set from the configuration
+for k, v in config.items():
+    if not v:
+        config.pop(k)
+
+# pop number of batches
 nr_batches = config.pop('nr_batches')
 
 # configure the source
 source = nytimes.NYTimesSource(**config)
 
-# write ids and headers of the retrieved articles
-for idx, batch in enumerate(source.getDataBatch(nr_batches)):
-    print u'Received Batch {1} of {0} items'.format(len(batch), idx+1)
-    for item in batch:
-        print u'  - {0} - {1}'.format(item['_id'], item['headline.main'])
+# request batches of articles
+# only now will the source be accessed
+try:
+    for idx, batch in enumerate(source.getDataBatch(nr_batches)):
+        print u'Received Batch {1} of {0} items'.format(len(batch), idx+1)
+        for item in batch:
+            print u'  - {0} - {1}'.format(item['_id'], item['headline.main'])
+except (IOError) as e:
+    print "ERROR: {}".format(e)

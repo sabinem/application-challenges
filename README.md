@@ -43,8 +43,8 @@ all hits from your query.
 
 - The result of the query above would be stored in files with the following names:
 ```
-facebook_20170414_20170415.0.json
-facebook_20170414_20170415.1.json
+q-facebook-begin_date-20170414-end_data-20170415.0.json
+q-facebook-begin_date-20170414-end_date-20170415.1.json
 ...
 ```
 - Each batch contains 10 or less articles
@@ -79,3 +79,20 @@ is turned into:
 - Run the tests with `python2 -m unittest discover`
 
 - The dataloader does not have tests yet.
+
+## On the New York Times Article API
+
+### Supported Queries
+- supports quite suffisticated query logic with Lucene
+[see here for details](http://developer.nytimes.com/article_search_v2.json#/README)
+- returns always a batch of 10 articles or less
+- the total number of **hits** and the **offset** are returned as well
+- the **offset** is 0 for the first page
+- subsequent batches can be requested by including the `page`
+query parameter
+
+### Detecting Connection Errors
+- the **status** returned by the API will be either 'OK' or 'ERROR'
+- in case of 'ERROR' a list of `errors` comes back
+- in some cases there will be just a `message` coming back,
+for example when the API Rate Limit is reached.

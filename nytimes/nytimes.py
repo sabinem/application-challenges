@@ -32,6 +32,7 @@ import json
 import urllib
 import time
 import os
+import re
 
 import nyt_constants
 import makeflat
@@ -42,9 +43,20 @@ from settings import log, JSON_DIR, NYT_REPORT_UNKNOWN_VALUES
 def make_outputfile_name(query):
     """
     makes a recognizable filename from the query dict
+
+    Example:
+    {
+    "begin_date": "20170414",
+    "end_date": "20170415"
+    "q": "Facebook"
+    }
+    is turned into:
+
+    q-facebook-begin_date-20170414-end_data-20170415
     """
-    query_parms = [v.lower().replace(" ", "-") for k, v in query.items()]
-    return '_'.join(query_parms)
+    value = str(query)
+    value = re.sub(r'[^\w\s-]', '', value).strip().lower()
+    return re.sub(r'[-\s]+', '-', value)
 
 
 class NYTimesSource(object):
@@ -201,6 +213,11 @@ class NYTimesSource(object):
 
             # connect to source
             self._connect()
+
+            # break if no hits could be found
+            if self.hits == 0:
+                log.info("No hits for this query!")
+                break
 
             # now self.raw_articles is set as a list
             # of the articles, that have just been
