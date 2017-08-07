@@ -83,12 +83,16 @@ is turned into:
 ## On the New York Times Article API
 
 ### Supported Queries
-- supports quite suffisticated query logic with Lucene
+- supports quite sophisticated query logic with Lucene
 [see here for details](http://developer.nytimes.com/article_search_v2.json#/README)
+- the **fields** are documented
+[here](http://developer.nytimes.com/article_search_v2.json#/Documentation)
+at this location you can also try queries and watch how the query parameters are set
+in different programming languages
 - returns always a batch of 10 articles or less
 - the total number of **hits** and the **offset** are returned as well
 - the **offset** is 0 for the first page
-- subsequent batches can be requested by including the `page`
+- **subsequent pages** can be requested by including the `page`
 query parameter
 
 ### Detecting Connection Errors
