@@ -83,7 +83,7 @@ is turned into:
 ## On the New York Times Article API
 
 ### Supported Queries
-- supports quite sophisticated query logic with Lucene
+- the API supports quite sophisticated query logic with Lucene
 [see here for details](http://developer.nytimes.com/article_search_v2.json#/README)
 - the **fields** are documented
 [here](http://developer.nytimes.com/article_search_v2.json#/Documentation)
