@@ -5,7 +5,7 @@
 - It is assumed you have **Python 2.7** installed on your machine
 
 ## Install
-- Unzip the directory and then go into the directory:
+- Unzip the directory and then go into the directory
 
 ## Get Api Key
 
