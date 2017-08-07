@@ -65,7 +65,6 @@ parser.add_argument("-q",
 
 # parse the arguments and set configuration
 args = parser.parse_args()
-print type(args)
 config = vars(args)
 
 # pop args that are not set from the configuration
