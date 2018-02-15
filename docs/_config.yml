@@ -1,1 +1,4 @@
 theme: jekyll-theme-leap-day
+index_url: 'https://sabinem.github.io/code-challenges/' 
+base_url: 'https://sabinem.github.io/'
+description: Hier sammle ich Artikel über Online Kurse, von einem Blog, den ich mal inne hatte.
