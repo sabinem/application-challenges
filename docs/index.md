@@ -4,4 +4,4 @@
 In this challenge I wrote a command line tool that fetched **articles for given search parameters in batches** of 10 records from the **New York Times Api**
 
 ## Back to sabinem.github.io
-Finished? You want to go back to the [homepage](index.md)?
+Finished? You want to go back to the [homepage](../)?
